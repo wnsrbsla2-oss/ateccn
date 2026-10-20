@@ -1467,9 +1467,9 @@
     function applyTopTableRows(topRows) {
       if (!topRows || topRows.length === 0) return;
       var topJoined = topRows.map(function(r) { return r.join(' '); }).join(' ');
-      var dateMatch = topJoined.match(/\d{4}-\d{2}-\d{2}/);
+      var dateMatch = topJoined.match(/당일\s*최저가\s*현황[^\d]*(\d{4}-\d{2}-\d{2})/);
       if (dateMatch) {
-        var latestDateStr = dateMatch[0];
+        var latestDateStr = dateMatch[1];
         var badgeEl = document.getElementById('metaBaseDate');
         if (badgeEl) badgeEl.textContent = latestDateStr;
         var titleEl = document.getElementById('overviewPanelTitle');
@@ -1535,8 +1535,6 @@
     function parseAndUpdateDataFromRows(rows) {
       try {
         if (!rows || rows.length < 3) return false;
-
-        applyTopTableRows(rows.slice(0, 7));
 
         var wIdx = -1, mIdx = -1;
         for (var idx = 0; idx < Math.min(12, rows.length); idx++) {
@@ -1645,6 +1643,20 @@
           var startD = dailyData[0].date.replace('월 ', '.').replace('일', '');
           var endD = dailyData[dailyData.length - 1].date.replace('월 ', '.').replace('일', '');
           subEl.textContent = '최근 ' + dailyData.length + '일간(' + startD + ' ~ ' + endD + ')의 부품별 최저가 변동 궤적';
+
+          var lastDateStr = dailyData[dailyData.length - 1].date || '';
+          var dm = lastDateStr.match(/(\d+)월\s*(\d+)일/);
+          if (dm) {
+            var ymd = '2026-' + dm[1].padStart(2, '0') + '-' + dm[2].padStart(2, '0');
+            var bEl = document.getElementById('metaBaseDate');
+            if (bEl) bEl.textContent = ymd;
+            var tEl = document.getElementById('overviewPanelTitle');
+            if (tEl) tEl.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> [당일 최저가 현황 (' + ymd + ' 기준)]';
+            var hSub = document.getElementById('headerSubtitleText');
+            if (hSub) hSub.textContent = '제미나이 스파크 작업창 연동 • ' + ymd + ' 기준 최신 시트 실시간 연동 • 일일 자동 스케줄러 가동 중';
+            var cNote = document.getElementById('calcNoteDate');
+            if (cNote) cNote.textContent = '* ' + ymd + ' 최신 시트 기준 최저가 반영 수치입니다.';
+          }
         }
 
         rebuildOverviewChart();
